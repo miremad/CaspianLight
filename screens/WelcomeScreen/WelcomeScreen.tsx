@@ -1,13 +1,20 @@
 import * as React from 'react';
 import { View, Text, Pressable, StyleSheet, Image } from 'react-native';
-import * as Progress from 'react-native-progress';
+import {NetworkInfo} from 'react-native-network-info';
 
 
 export default function WelcomeScreen ({ navigation }: any) {
 
   const [btnStyle, setBtnStyle] = React.useState(styles.btn);
+  const [isWifiOk, setIsWifiOk] = React.useState(false);
 
-  React.useEffect(() => {console.log("ddd", navigation);
+  React.useEffect(() => {
+    NetworkInfo.getSSID().then(ssid => {
+      console.log("ssid",ssid);
+      tryWifi()
+    });
+    
+    
   })
   const goToHome = () => {
 
@@ -15,6 +22,19 @@ export default function WelcomeScreen ({ navigation }: any) {
     
     setBtnStyle(styles.btnClicked);
     navigation.navigate('Home');
+
+  }
+
+  const tryWifi = () => {
+
+    NetworkInfo.getSSID().then(ssid => {
+      console.log(ssid)
+      if(ssid == "AndroidWifi")
+      {
+        setIsWifiOk(true)
+      }
+      // setIsWifiOk(true)
+    });
 
   }
   
@@ -26,14 +46,26 @@ export default function WelcomeScreen ({ navigation }: any) {
         <View style={styles.logo}>
           <Image style={{width: '70%', aspectRatio: 1}} source={require('./../../assets/images/WifiLogo.png')} />
         </View>
-        <View style={styles.logo}>
-          <Text style={styles.text}>Hello</Text>
-          <Text style={styles.text}>Welcome</Text>
-        </View>
+        {isWifiOk ? 
+                    <View style={styles.logo}>
+                      <Text style={styles.text}>Hello</Text>
+                      <Text style={styles.text}>Welcome</Text>
+                    </View> : 
+                    <View style={styles.logo}>
+                      <Text style={styles.text}>Check wifi then</Text>
+                      <Text style={styles.text}>Try again</Text>
+                    </View>}
+        
         <View style={styles.space}>
-          <Pressable style={btnStyle} onPress={() => {goToHome()}}>
-            <Text style={styles.text}>Lets go</Text>
-          </Pressable>
+          {isWifiOk ? 
+            <Pressable style={btnStyle} onPress={() => {goToHome()}}>
+              <Text style={styles.text}>Lets go</Text>
+            </Pressable>
+            : 
+            <Pressable style={btnStyle} onPress={() => {tryWifi()}}>
+              <Text style={styles.text}>Try again</Text>
+            </Pressable>
+          }
         </View>
     </View>
   );

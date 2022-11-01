@@ -13,28 +13,57 @@ type menuItems = {
 
 export default function DevicesScreen({ navigation }: any) {
 
-    const multiSelect = () => {}
-    const selectAll = () => {}
+    const multiSelect = () => {setIsSelectable(true)}
+    const selectAll = () => {setData(data.map(x => {return {...x, isSelected: true}})); setIsSelectable(true)};
+    const selectByIndex = (id: number) => {
+        console.log(id);
+        
+        setData(data.map((x, index) => {
+            if(index == id) 
+            {
+                return {...x, isSelected: !data[id].isSelected} 
+            } 
+            else 
+            {
+                return x
+            }
+        }))}
     const goToCreate = () => navigation.navigate('Create')
     const [isSelected, setIsSelected] = React.useState(true);
+    const [isSelectable, setIsSelectable] = React.useState(false);
     const [data, setData] = React.useState([
         {id: 0, isSelected: false, color: 25},
         {id: 0, isSelected: false, color: 25},
         {id: 0, isSelected: false, color: 25},
         {id: 0, isSelected: false, color: 25},
         {id: 0, isSelected: true, color: 25}]);
+
+    React.useEffect(() => {
+        console.log(data);
+        
+    }, [data])
     return (
         <View style={{flex: 1, backgroundColor: '#F4D84F'}}>
             <Header menuItems={[{tittle: 'multi select', f : multiSelect}, {tittle: 'select all', f : selectAll}]} backgroundColor={'#F4D84F'} hasBack ={true} hasMenu={true} textColor='white' key={1} navigation={navigation} />
             <View style={{flex: 5}}>
                 <ScrollView contentContainerStyle={styles.container} scrollEnabled={true}>
 
-                    {data.map((item, index) => {return <View key={index} style={[styles.item, item.isSelected === true ? styles.selected : null]}>
+                    {data.map((item, index) => {return isSelectable ?  <View onTouchEnd={() => {selectByIndex(index)}} key={index} style={[styles.item, item.isSelected === true ? styles.selected : null]}>
                         <Text style={{position: 'absolute', top: 1, left: 10, color: '#9F9F9F', fontSize: 20, fontWeight: '800'}}>{item.id}</Text>
                         <View style={{flex: 1, flexWrap: 'wrap'}}>
-                            <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', width: '100%'}}><Text style={{fontSize: 35}}><Image source={require('./../../assets/images/sun.png')}></Image></Text></View>
-                            <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', width: '100%'}}><Text style={{color: '#ffffff', fontSize: 20, fontWeight: '800'}}>{item.color}</Text></View>
-                            <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', width: '100%'}}><Text style={{color: '#5F5C5C', fontSize: 20, fontWeight: '800'}}>yellow</Text></View>
+                            <View style={[styles.w100]}><Text style={{fontSize: 35}}><Image source={require('./../../assets/images/sun.png')}></Image></Text></View>
+                            <View style={[styles.w100]}><Text style={{color: '#ffffff', fontSize: 20, fontWeight: '800'}}>{item.color}</Text></View>
+                            <View style={[styles.w100]}><Text style={{color: '#5F5C5C', fontSize: 20, fontWeight: '800'}}>yellow</Text></View>
+                        </View>
+                        {item.isSelected === true ? <Image style={{position: 'absolute', bottom: 0, right: 0}} source={require('./../../assets/images/check.png')}></Image> : null}
+                    </View> 
+                    : 
+                    <View key={index} style={[styles.item, item.isSelected === true ? styles.selected : null]}>
+                        <Text style={{position: 'absolute', top: 1, left: 10, color: '#9F9F9F', fontSize: 20, fontWeight: '800'}}>{item.id}</Text>
+                        <View style={{flex: 1, flexWrap: 'wrap'}}>
+                            <View style={[styles.w100]}><Text style={{fontSize: 35}}><Image source={require('./../../assets/images/sun.png')}></Image></Text></View>
+                            <View style={[styles.w100]}><Text style={{color: '#ffffff', fontSize: 20, fontWeight: '800'}}>{item.color}</Text></View>
+                            <View style={[styles.w100]}><Text style={{color: '#5F5C5C', fontSize: 20, fontWeight: '800'}}>yellow</Text></View>
                         </View>
                         {item.isSelected === true ? <Image style={{position: 'absolute', bottom: 0, right: 0}} source={require('./../../assets/images/check.png')}></Image> : null}
                     </View>})}
@@ -87,5 +116,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center'
 
+    },
+    w100: {
+        flex: 1, 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        width: '100%'
     }
+
+
   })

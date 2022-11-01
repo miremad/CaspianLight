@@ -1,75 +1,85 @@
 import * as React from 'react';
 import { View, Image, StyleSheet, Pressable, Text, Dimensions, Button, Slider } from 'react-native';
 import Header from '../components/MenuHeader';
-import FlashMessage, { showMessage, hideMessage, MessageType } from "react-native-flash-message";
-// import Slider from '@react-native-community/slider';
+import FlashMessage, { showMessage, MessageType } from "react-native-flash-message";
+import dgram from 'react-native-udp'
+import {NetworkInfo} from 'react-native-network-info';
 
 const wd = Dimensions.get('screen').width;
 const ht = Dimensions.get('screen').height;
-console.log(wd)
-export default function HomeScreen({ navigation }: any) {
+const socket = dgram.createSocket({type: 'udp4', debug: true, reusePort: undefined});
+socket.bind(5555);
 
+export default function HomeScreen({ navigation }: any) {
 
   const [backgroundColor, setBackgroundColor] = React.useState('#F4D84F');
   const [power, setPower] = React.useState(true);
-  const [pValue, setPValue] = React.useState(.5);
-  const [CValue, setCValue] = React.useState(.5);
-
-  
+  const [pValue, setPValue] = React.useState(50);
+  const [CValue, setCValue] = React.useState(50);
+  const [isWifiOk, setIsWifiOk] = React.useState<boolean | undefined>(undefined);
+  const port = 12345;
+  const ip = "172.16.16.204";
 
   const togglePower = () => {
     setPower(x => !x)
+    socket.send('R1on', undefined, undefined, port, ip, function(err) {
+      if (err) console.log("error", err);
+    })
   }
 
   const showAlert = (type: MessageType) => {
-    
     if(type === 'success')
-      showMessage({message: "Simple message",type: "success"});
+      showMessage({message: "wifi is connected",type: "success"});
     else if(type === 'danger')
-      showMessage({message: "Simple message",type: "danger"});
+      showMessage({message: "check your device's wifi",type: "danger"});
   }
 
-  const iskWifiOk = (): boolean => {
-    return true
+  function iskWifiOk(): void {
+    
+    NetworkInfo.getSSID().then(ssid => {
+      console.log("ssid : ", ssid);
+      
+      if(ssid == "AndroidWifi")
+      {
+        setIsWifiOk(true)
+      }
+      else {
+        setIsWifiOk(false)
+      }
+    })
+    
   }
   
   const goToCreateScreem = () => {navigation.navigate('Create')}
-
   const goToDevicesScreem = () => {navigation.navigate('Devices')}
-
-  const goToAbout = () => {
-    console.log("About");
-    
-    navigation.navigate('About');
-}
-
+  const goToAbout = () => {navigation.navigate('About');}
   const reset = () => {}
 
   React.useEffect(() => {
-    
-    if(iskWifiOk())
+   
+    iskWifiOk()
+  })
+
+  React.useEffect(() => {
+    if(isWifiOk === true)
     {
       showAlert('success');
     }
-    else
+    else if(isWifiOk === false)
     {
       showAlert('danger')
     }
-  }, [])
+  }, [isWifiOk])
 
   React.useEffect(() => {
-
     if(power === true)
     {
       setBackgroundColor('#F4D84F')
-
     }
     else
     {
       setBackgroundColor('#1D1D1D')
-
     }
-
   }, [power])
 
   return (
@@ -105,28 +115,29 @@ export default function HomeScreen({ navigation }: any) {
               <Slider
                 style={{flex: 3}}
                 minimumValue={0}
-                maximumValue={1}
+                maximumValue={100}
                 minimumTrackTintColor="#494949"
                 maximumTrackTintColor="#979797"
                 thumbTintColor="#494949"
                 value={CValue}
-                onValueChange={value => setCValue(value)}
+                onSlidingComplete={value => {setCValue(Number(value.toString().split('.')[0]))}}
               />
-                  <View style={{flex:1, justifyContent: 'center'}}><Text style={{color: '#000000', fontWeight: '800'}}> 100%</Text></View>
+                  <View style={{flex:1, justifyContent: 'center'}}><Text style={{color: '#000000', fontWeight: '800'}}> {CValue + "%"}</Text></View>
             </View>
             <View style={{ flexDirection: 'row', backgroundColor: 'rgba(255, 255, 255, 0.43)', borderRadius: 10, padding: 5, flex: 1, margin: 10}}>
               <View style={{flex: 1, justifyContent: 'center', alignContent: 'center'}}><Text><Text style={{color: '#999999', fontWeight: '800'}}>Power: </Text><Text style={{color: '#000000', fontWeight: '800'}}>0% </Text></Text></View>
               <Slider
                 style={{flex: 3}}
                 minimumValue={0}
-                maximumValue={1}
+                maximumValue={100}
                 minimumTrackTintColor="#494949"
                 maximumTrackTintColor="#979797"
                 thumbTintColor="#494949"
                 value={pValue}
-                onValueChange={value => setPValue(value)}
+                onSlidingComplete={value => setPValue(Number(value.toString().split('.')[0]))}
+                
               />
-                  <View style={{flex:1, justifyContent: 'center'}}><Text style={{color: '#000000', fontWeight: '800'}}> 100%</Text></View>
+                  <View style={{flex:1, justifyContent: 'center'}}><Text style={{color: '#000000', fontWeight: '800'}}> {pValue + "%"}</Text></View>
             </View>
           </>
           : <></>}
